@@ -1,0 +1,16 @@
+[DEVICE]
+Name=ATMEGA32
+Clock=8000000
+[BUILD_TYPE]
+Value=0
+[FILES]
+Count=1
+File0=Click_Tamper2_AVR.c
+[HEADERS]
+Count=2
+File0=Click_Tamper2_config.h
+File1=Click_Tamper2_types.h
+[PLDS]
+Count=1
+File0=Click_Tamper2.pld
+

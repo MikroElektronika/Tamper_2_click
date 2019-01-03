@@ -1,0 +1,15 @@
+[DEVICE]
+Name=FT900
+Clock=100000000
+[BUILD_TYPE]
+Value=0
+[FILES]
+Count=1
+File0=Click_Tamper2_FT90x.c
+[HEADERS]
+Count=2
+File0=Click_Tamper2_config.h
+File1=Click_Tamper2_types.h
+[PLDS]
+Count=1
+File0=Click_Tamper2.pld

@@ -1,0 +1,105 @@
+'
+'Example for Tamper2 Click
+'
+'    Date          : Nov 2017.
+'    Author        : MikroE Team
+'
+'Test configuration PIC32 :
+'    
+'    MCU                : P32MX795F512L
+'    Dev. Board         : EasyPIC Fusion v7
+'    PIC32 Compiler ver : v4.0.0.0
+'
+'---
+'
+'Description :
+'
+'The application is composed of three sections :
+'
+'- System Initialization - GPIO and UART initialization 
+'- Application Initialization - Sends HAL pointers
+'- Application Task - Detects whether the state of switch on Tamper 2 click is ON or OFF.
+'
+'Additional Functions :
+'
+'-   
+'-
+'
+'
+program Click_Tamper2_PIC32
+
+include Click_Tamper2_types
+sub function  getAN() as uint8_t 
+
+    result = PORTB.B8 
+
+end sub
+
+sub function  getINT() as uint8_t 
+
+    result = PORTE.B8 
+
+end sub
+
+typedef  T_hal_gpioGetFp   as sub function() as uint8_t
+typedef T_hal_gpioSetFp  as sub procedure(dim state as uint8_t)
+
+typedef T_gpio_setFp_           as ^T_hal_gpioSetFp
+typedef T_gpio_getFp_           as ^T_hal_gpioGetFp
+
+    
+    structure T_hal_gpioObj
+        dim gpioSet as T_gpio_setFp_[12]
+        dim gpioGet as T_gpio_getFp_[12]
+    end structure
+    
+const
+    GPIO_BUS as T_hal_gpioObj = ((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (@getAN, 0, 0, 0, 0, 0, 0, @getINT, 0, 0, 0, 0))
+    
+dim
+    TAMPER_OFF_STATE_Direction as sbit at TRISB.B8 
+    TAMPER_ON_STATE_Direction as sbit at TRISE.B8 
+    
+
+
+sub procedure systemInit() 
+
+    AD1PCFG = 0xFFFF 
+    TAMPER_OFF_STATE_Direction = 1 
+    TAMPER_ON_STATE_Direction = 1 
+    UART2_Init(9600) 
+    Delay_ms(100) 
+
+end sub
+
+sub procedure applicationInit() 
+
+    tamper2_gpioDriverInit(T_TAMPER2_P(@GPIO_BUS)) 
+
+end sub
+
+sub procedure applicationTask() 
+
+    if (tamper2_getOnState()) then 
+        UART2_Write_text("Tamper 2 click is in ON state.") 
+        UART2_Write(13) 
+        UART2_Write(10) 
+    end if
+    if (tamper2_getOffState()) then 
+        UART2_Write_text("Tamper 2 click is in OFF state.") 
+        UART2_Write(13) 
+        UART2_Write(10) 
+    end if
+    Delay_ms(200) 
+
+end sub
+
+main :
+
+    systemInit() 
+    applicationInit() 
+    while (1) 
+        applicationTask() 
+    wend
+
+end.

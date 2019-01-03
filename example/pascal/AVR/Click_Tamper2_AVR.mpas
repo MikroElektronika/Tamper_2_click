@@ -1,0 +1,108 @@
+{*
+Example for Tamper2 Click
+
+    Date          : Nov 2017.
+    Author        : MikroE Team
+
+Test configuration AVR :
+    
+    MCU              : ATMEGA32
+    Dev. Board       : EasyAVR v7 
+    AVR Compiler ver : v7.0.1.0
+
+---
+
+Description :
+
+The application is composed of three sections :
+
+- System Initialization - GPIO and UART initialization 
+- Application Initialization - Sends HAL pointers
+- Application Task - Detects whether the state of switch on Tamper 2 click is ON or OFF.
+
+Additional Functions :
+
+-   
+-
+
+*}
+program Click_Tamper2_AVR;
+
+uses Click_Tamper2_types;
+function  getAN() :  uint8_t; 
+begin
+
+    result := PINA7_bit; 
+
+end;
+
+function  getINT() :  uint8_t; 
+begin
+
+    result := PIND2_bit; 
+
+end;
+type T_hal_gpioSetFp = procedure( state : uint8_t );
+type T_hal_gpioGetFp = function() : uint8_t;
+
+type
+        T_hal_gpioObj = record 
+        gpioSet : array[12] of ^T_hal_gpioSetFp;
+        gpioGet : array[12] of ^T_hal_gpioGetFp;
+    end;
+    
+const
+    GPIO_BUS : T_hal_gpioObj = ((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (@getAN, 0, 0, 0, 0, 0, 0, @getINT, 0, 0, 0, 0)); 
+    
+var
+    TAMPER_OFF_STATE_Direction : sbit at DDA7_bit; 
+    TAMPER_ON_STATE_Direction : sbit at DDD2_bit; 
+    
+
+
+procedure systemInit(); 
+begin
+
+    TAMPER_OFF_STATE_Direction := 0; 
+    TAMPER_ON_STATE_Direction := 0; 
+    UART1_Init(9600); 
+    Delay_ms(100); 
+
+end;
+
+procedure applicationInit(); 
+begin
+
+    tamper2_gpioDriverInit(T_TAMPER2_P(@GPIO_BUS)); 
+
+end;
+
+procedure applicationTask(); 
+begin
+
+    if (tamper2_getOnState()) then 
+    begin
+        UART1_Write_text('Tamper 2 click is in ON state.'); 
+        UART1_Write(13); 
+        UART1_Write(10); 
+    end; 
+    if (tamper2_getOffState()) then 
+    begin
+        UART1_Write_text('Tamper 2 click is in OFF state.'); 
+        UART1_Write(13); 
+        UART1_Write(10); 
+    end; 
+    Delay_ms(200); 
+
+end;
+
+begin
+
+    systemInit(); 
+    applicationInit(); 
+    while (1) do 
+    begin 
+        applicationTask(); 
+    end;
+
+end.

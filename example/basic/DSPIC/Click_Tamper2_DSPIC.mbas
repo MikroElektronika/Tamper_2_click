@@ -1,0 +1,108 @@
+'
+'Example for Tamper2 Click
+'
+'    Date          : Nov 2017.
+'    Author        : MikroE Team
+'
+'Test configuration dsPIC :
+'    
+'    MCU                : P33FJ256GP710A
+'    Dev. Board         : EasyPIC Fusion v7
+'    dsPIC Compiler ver : v7.0.1.0
+'
+'---
+'
+'Description :
+'
+'The application is composed of three sections :
+'
+'- System Initialization - GPIO and UART initialization 
+'- Application Initialization - Sends HAL pointers
+'- Application Task - Detects whether the state of switch on Tamper 2 click is ON or OFF.
+'
+'Additional Functions :
+'
+'-   
+'-
+'
+'
+program Click_Tamper2_DSPIC
+
+include Click_Tamper2_types
+sub function  getAN() as uint8_t 
+
+    result = RB0_bit 
+
+end sub
+
+sub function  getINT() as uint8_t 
+
+    result = RE8_bit 
+
+end sub
+
+typedef  T_hal_gpioGetFp   as sub function() as uint8_t
+typedef T_hal_gpioSetFp  as sub procedure(dim state as uint8_t)
+
+typedef T_gpio_setFp_           as ^T_hal_gpioSetFp
+typedef T_gpio_getFp_           as ^T_hal_gpioGetFp
+
+    
+    structure T_hal_gpioObj
+        dim gpioSet as T_gpio_setFp_[12]
+        dim gpioGet as T_gpio_getFp_[12]
+    end structure
+    
+const
+    GPIO_BUS as T_hal_gpioObj = ((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (@getAN, 0, 0, 0, 0, 0, 0, @getINT, 0, 0, 0, 0))
+    
+
+
+sub procedure systemInit() 
+
+    ANSELA = 0x00 ' Convert all I/O pins to digital
+    ANSELB = 0x00 
+    ANSELC = 0x00 
+    ANSELD = 0x00 
+    ANSELE = 0x00 
+    ANSELG = 0x00 
+    PPS_Mapping(100, _INPUT, _U1RX) ' Sets pin RP100 to be Input, and maps U1RX to it
+    PPS_Mapping(101, _OUTPUT, _U1TX) ' Sets pin RP101 to be Output, and maps U1TX to it
+    TRISB0_bit = 1 ' RB0 input
+    TRISE8_bit = 1 ' RE0 input
+    UART1_Init(9600) 
+    Delay_ms(100) 
+
+end sub
+
+sub procedure applicationInit() 
+
+    tamper2_gpioDriverInit(T_TAMPER2_P(@GPIO_BUS)) 
+
+end sub
+
+sub procedure applicationTask() 
+
+    if (tamper2_getOnState()) then 
+        UART1_Write_text("Tamper 2 click is in ON state.") 
+        UART1_Write(13) 
+        UART1_Write(10) 
+    end if
+    if (tamper2_getOffState()) then 
+        UART1_Write_text("Tamper 2 click is in OFF state.") 
+        UART1_Write(13) 
+        UART1_Write(10) 
+    end if
+    Delay_ms(200) 
+
+end sub
+
+main :
+
+    systemInit() 
+    applicationInit() 
+    while (1) 
+        applicationTask() 
+    wend
+
+end.

@@ -1,0 +1,104 @@
+{*
+Example for Tamper2 Click
+
+    Date          : Nov 2017.
+    Author        : MikroE Team
+
+Test configuration FT90x :
+    
+    MCU                : FT900
+    Dev. Board         : EasyFT90x v7 
+    FT90x Compiler ver : v2.2.1.0
+
+---
+
+Description :
+
+The application is composed of three sections :
+
+- System Initialization - GPIO and UART initialization 
+- Application Initialization - Sends HAL pointers
+- Application Task - Detects whether the state of switch on Tamper 2 click is ON or OFF.
+
+Additional Functions :
+
+-   
+-
+
+*}
+program Click_Tamper2_FT90x;
+
+uses Click_Tamper2_types;
+function  getAN() :  uint8_t; 
+begin
+
+    result := GPIO_PIN9_bit; 
+
+end;
+
+function  getINT() :  uint8_t; 
+begin
+
+    result := GPIO_PIN3_bit; 
+
+end;
+type T_hal_gpioSetFp = procedure( state : uint8_t );
+type T_hal_gpioGetFp = function() : uint8_t;
+
+type
+        T_hal_gpioObj = record 
+        gpioSet : array[12] of ^T_hal_gpioSetFp;
+        gpioGet : array[12] of ^T_hal_gpioGetFp;
+    end;
+    
+const
+    GPIO_BUS : T_hal_gpioObj = ((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (@getAN, 0, 0, 0, 0, 0, 0, @getINT, 0, 0, 0, 0)); 
+    
+
+
+procedure systemInit(); 
+begin
+
+    GPIO_Digital_Input(@GPIO_PORT_00_07, _GPIO_PINMASK_3); 
+    GPIO_Digital_Input(@GPIO_PORT_08_15, _GPIO_PINMASK_1); 
+    UART1_Init(9600); 
+    Delay_ms(100); 
+
+end;
+
+procedure applicationInit(); 
+begin
+
+    tamper2_gpioDriverInit(T_TAMPER2_P(@GPIO_BUS)); 
+
+end;
+
+procedure applicationTask(); 
+begin
+
+    if (tamper2_getOnState()) then 
+    begin
+        UART1_Write_text('Tamper 2 click is in ON state.'); 
+        UART1_Write(13); 
+        UART1_Write(10); 
+    end; 
+    if (tamper2_getOffState()) then 
+    begin
+        UART1_Write_text('Tamper 2 click is in OFF state.'); 
+        UART1_Write(13); 
+        UART1_Write(10); 
+    end; 
+    Delay_ms(200); 
+
+end;
+
+begin
+
+    systemInit(); 
+    applicationInit(); 
+    while (1) do 
+    begin 
+        applicationTask(); 
+    end;
+
+end.

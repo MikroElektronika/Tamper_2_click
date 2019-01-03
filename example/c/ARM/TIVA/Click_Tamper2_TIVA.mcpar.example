@@ -1,0 +1,15 @@
+[DEVICE]
+Name=TM4C129XNCZAD
+Clock=120000000
+[BUILD_TYPE]
+Value=0
+[FILES]
+Count=1
+File0=Click_Tamper2_TIVA.c
+[HEADERS]
+Count=2
+File0=Click_Tamper2_config.h
+File1=Click_Tamper2_types.h
+[PLDS]
+Count=1
+File0=Click_Tamper2.pld

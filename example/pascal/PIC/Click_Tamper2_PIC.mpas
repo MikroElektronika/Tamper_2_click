@@ -1,0 +1,111 @@
+{*
+Example for Tamper2 Click
+
+    Date          : Nov 2017.
+    Author        : MikroE Team
+
+Test configuration PIC :
+    
+    MCU             : P18F87K22
+    Dev. Board      : EasyPIC PRO v7
+    PIC Compiler ver : v7.1.0.0
+
+---
+
+Description :
+
+The application is composed of three sections :
+
+- System Initialization - GPIO and UART initialization 
+- Application Initialization - Sends HAL pointers
+- Application Task - Detects whether the state of switch on Tamper 2 click is ON or OFF.
+
+Additional Functions :
+
+-   
+-
+
+*}
+program Click_Tamper2_PIC;
+
+uses Click_Tamper2_types;
+function  getAN() :  uint8_t; 
+begin
+
+    result := PORTA.B0; 
+
+end;
+
+function  getINT() :  uint8_t; 
+begin
+
+    result := PORTB.B0; 
+
+end;
+
+type T_hal_gpioSetFp = procedure( state : uint8_t );
+type T_hal_gpioGetFp = function() : uint8_t;
+
+type
+        T_hal_gpioObj = record 
+        gpioSet : array[12] of ^T_hal_gpioSetFp;
+        gpioGet : array[12] of ^T_hal_gpioGetFp;
+    end;
+    
+const
+    GPIO_BUS : T_hal_gpioObj = ((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (@getAN, 0, 0, 0, 0, 0, 0, @getINT, 0, 0, 0, 0)); 
+    
+var
+    TAMPER_OFF_STATE_Direction : sbit at TRISA.B0; 
+    TAMPER_ON_STATE_Direction : sbit at TRISB.B0; 
+    
+
+procedure systemInit(); 
+begin
+
+    ANCON0 := 0x00; 
+    ANCON1 := 0x00; 
+    ANCON2 := 0x00; 
+    TAMPER_OFF_STATE_Direction := 1; 
+    TAMPER_ON_STATE_Direction := 1; 
+    UART1_Init(9600); 
+    Delay_ms(100); 
+
+end;
+
+procedure applicationInit(); 
+begin
+
+    tamper2_gpioDriverInit(T_TAMPER2_P(@GPIO_BUS)); 
+
+end;
+
+procedure applicationTask(); 
+begin
+
+    if (tamper2_getOnState()) then 
+    begin
+        UART1_Write_text('Tamper 2 click is in ON state.'); 
+        UART1_Write(13); 
+        UART1_Write(10); 
+    end; 
+    if (tamper2_getOffState()) then 
+    begin
+        UART1_Write_text('Tamper 2 click is in OFF state.'); 
+        UART1_Write(13); 
+        UART1_Write(10); 
+    end; 
+    Delay_ms(200); 
+
+end;
+
+begin
+
+    systemInit(); 
+    applicationInit(); 
+    while (1) do 
+    begin 
+        applicationTask(); 
+    end;
+
+end.
